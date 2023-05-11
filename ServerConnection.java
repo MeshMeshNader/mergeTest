@@ -15,9 +15,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import tictactoeclient.GameDTO;
 import tictactoeclient.Messages;
-import tictactoeclient.MoveDTO;
 import tictactoeclient.UserDTO;
 
 /**
@@ -33,7 +31,7 @@ public class ServerConnection {
     Socket socket;
     String ip;
     int portNum;
-    Object obj;
+    UserDTO obj;
     String msg;
 
     public ServerConnection(Socket socket) {
@@ -77,54 +75,53 @@ public class ServerConnection {
                             obj = (UserDTO) objectinputstream.readObject();
                             sendMessage(Messages.registrationResponse, registrationValidation());
 
-                        } else if (msg.equals(Messages.getOnlineUsersRequest)) {
-                            sendMessage(Messages.getOnlineUsersResponse, retriveOnlineUsers());
+                        } else if (msg.equals(Messages.getOfflinePlayersNumRequest)) {
 
-                        } else if (msg.equals(Messages.incNumOfWinsRequest)) {
-                            sendMessage(Messages.incNumOfWinsResponse, incNumOfWins());
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.getOfflinePlayersNumResponse, getOfflinePlayersNumValidation());
 
-                        } else if (msg.equals(Messages.incNumOflossesRequest)) {
-                            sendMessage(Messages.incNumOflossesResponse, incNumOfLossess());
+                        } else if (msg.equals(Messages.logoutRequest)) {
 
-                        } else if (msg.equals(Messages.setGameRequest)) {
-                            obj = (GameDTO) objectinputstream.readObject();
-                            sendMessage(Messages.setGameResponse, setGameResponse());
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.logoutResponse, logoutValidation(obj.getUserName()));
 
-                        } else if (msg.equals(Messages.getGameRequest)) {
-                            sendMessage(Messages.getGameResponse, retriveGame());
+                        } else if (msg.equals(Messages.makePlayerOneBusyRequest)) {
 
-                        } else if (msg.equals(Messages.deleteGameRequest)) {
-                            sendMessage(Messages.deleteGameResponse, gameDeleted());
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.makePlayerOneBusyResponse, makePlayerOneBusyValidation(obj.getUserName()));
 
-                        } else if (msg.equals(Messages.deleteMoveRequest)) {
-                            sendMessage(Messages.deleteMoveResponse, moveDeleted());
+                        } else if (msg.equals(Messages.makePlayerTwoBusyRequest)) {
 
-                        } else if (msg.equals(Messages.makeUserOnlineRequest)) {
-                            sendMessage(Messages.makeUserOnlineResponse, makeUserOnline());
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.makePlayerTwoBusyResponse, makePlayerTwoBusyValidation(obj.getUserName()));
 
-                        } else if (msg.equals(Messages.makeUserOfflineRequest)) {
-                            sendMessage(Messages.makeUserOfflineResponse, makeuserOffline());
+                        }else if (msg.equals(Messages.getPlayerScoreRequest)) {
 
-                        } else if (msg.equals(Messages.getNumberOfWinsRequest)) {
-                            sendMessage(Messages.getNumberOfWinsResponse, getNumberOfWins());
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.getPlayerScoreResponse, getPlayerScoreValidation(obj.getUserName()));
 
-                        } else if (msg.equals(Messages.getNumberOfLossessRequest)) {
-                            sendMessage(Messages.getNumberOfLossesResponse, getNumberOfLossess());
+                        }else if (msg.equals(Messages.getPlayerScoreRequest)) {
+
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.getPlayerScoreResponse, getPlayerScoreValidation(obj.getUserName()));
+
+                        }else if (msg.equals(Messages.updateScoreRequest)) {
+
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.updateScoreResponse, updateScoreValidation(obj));
+
                         }
-                        
+                       
 
-                    } catch (IOException ex) {
-                        Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (SQLException ex) {
-                        Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (ClassNotFoundException | IOException e) {
+                        e.printStackTrace();
                     }
-
                 }
-            }
 
-        }.start();
+            }
+        }
+                .start();
+
     }
 
     public void sendMessage(String msg, Object obj) {
@@ -135,89 +132,70 @@ public class ServerConnection {
                 try {
                     objectoutputstream.writeObject(msg);
                     objectoutputstream.writeObject(obj);
+
                 } catch (IOException ex) {
-                    Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ServerConnection.class
+                            .getName()).log(Level.SEVERE, null, ex);
                 }
 
             }
         }.start();
     }
 
-    public ArrayList<UserDTO> retriveOnlineUsers() throws SQLException {
-        ArrayList<UserDTO> usersOnline;
-        usersOnline = DataAccessLayer.getOnlinePlayers();
-        if (usersOnline != null) {
-            return usersOnline;
-        } else {
-            return (new ArrayList<UserDTO>());
-        }
-
-    }
-
-    public GameDTO retriveGame() throws SQLException {
-        GameDTO Game;
-        Game = DataAccessLayer.getGame(((GameDTO) obj).getGameID());
-        if (Game != null) {
-            return Game;
-        } else {
-            return (new GameDTO());
-        }
-
-    }
-
-    public Boolean incNumOfWins() {
-        Boolean result = DataAccessLayer.incrementNumberOfWins(((UserDTO) obj).getUserName());
-
-        return result;
-
-    }
-
-    public Boolean incNumOfLossess() {
-        Boolean result = DataAccessLayer.incrementNumberOfLosses(((UserDTO) obj).getUserName());
-        return result;
-    }
-
-    public Boolean setGameResponse() {
-        Boolean result = DataAccessLayer.setGame((GameDTO) obj);
-        return result;
-    }
-
-    public Boolean gameDeleted() throws SQLException {
-        Boolean result = DataAccessLayer.deleteGame(((GameDTO) obj).getGameID());
-        return result;
-    }
-
-    public Boolean moveDeleted() throws SQLException {
-        int result = DataAccessLayer.deleteMove(((MoveDTO) obj).getMoveID());
-        if (result == 1) {
+    public Boolean loginValidation() {
+        // check database and return true if exist and true and false if failed
+        System.out.println("Login Validation Test");
+        /*  if (DataAccessLayer.login(obj.getUserName(), obj.getPassword())) {
             return true;
         } else {
             return false;
+        }*/
+        return true;
+    }
+
+    public boolean registrationValidation() {
+        // insert in database and return true if sucess and false if failed
+        System.out.println("Login Validation Test");
+        return false;
+    }
+
+    public Integer getOfflinePlayersNumValidation() {
+
+        System.out.println("OfflinePlayersNum Validation Test");
+
+        try {
+            return DataAccessLayer.getOfflinePlayersNum();
+
+        } catch (SQLException ex) {
+            Logger.getLogger(ServerConnection.class
+                    .getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+
+    public Boolean logoutValidation(String userName) {
+
+        return DataAccessLayer.logout(userName);
+    }
+
+    public Boolean makePlayerOneBusyValidation(String UserName) {
+        return DataAccessLayer.makePlayerOneBusy(UserName);
+    }
+
+    public Boolean makePlayerTwoBusyValidation(String UserName) {
+        return DataAccessLayer.makePlayerTwoBusy(UserName);
+    }
+    public Integer getPlayerScoreValidation(String UserName){
+        try {
+            return DataAccessLayer.getPlayerScore(UserName);
+        } catch (SQLException ex) {
+            Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+            return 0;
         }
     }
-
-    public Boolean makeUserOnline() {
-        Boolean result = DataAccessLayer.makeuserOnline(((UserDTO) obj).getUserName());
-        return result;
-
-    }
-
-    public Boolean makeuserOffline() {
-        Boolean result = DataAccessLayer.makeuserOffline(((UserDTO) obj).getUserName());
-        return result;
-
-    }
-
-    public Integer getNumberOfWins() {
-        Integer wins;
-        wins = DataAccessLayer.getNumberOfWins(((UserDTO) obj).getUserName());
-        return wins;
-    }
-
-    public Integer getNumberOfLossess() {
-        Integer losses;
-        losses = DataAccessLayer.getNumberOfLosses(((UserDTO) obj).getUserName());
-        return losses;
+    public Boolean updateScoreValidation(UserDTO obj)
+    {
+        return DataAccessLayer.updateScore(obj);
     }
 
 }

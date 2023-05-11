@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tictactoeclient;
+package nasr;
 
 import java.io.Serializable;
 
@@ -11,22 +11,25 @@ import java.io.Serializable;
  *
  * @author meshm
  */
-public class Messages implements Serializable {
-
+public class Messages implements Serializable{
     public static String loginResponse = "LoginResponse";
     public static String loginRequest = "LoginRequest";
     public static String registrationResponse = "RegistrationResponse";
     public static String registrationRequest = "RegistrationRequest";
-    public static String getOfflinePlayersNumRequest = "GetOfflinePlayersNumRequest";
-    public static String getOfflinePlayersNumResponse = "GetOfflinePlayersNumResponse";
-    public static String logoutRequest = "LogoutRequest";
-    public static String logoutResponse = "LogoutResponse";
-    public static String makePlayerOneBusyRequest = "MakePlayerOneBusyRequest";
-    public static String makePlayerOneBusyResponse = "MakePlayerOneBusyResponse";
-    public static String makePlayerTwoBusyRequest = "MakePlayerTwoBusyRequest";
-    public static String makePlayerTwoBusyResponse = "MakePlayerTwoBusyResponse";
-    public static String getPlayerScoreRequest = "getPlayerScoreRequest";
-    public static String getPlayerScoreResponse = "getPlayerScoreResponse";
-    public static String updateScoreRequest = "updateScoreRequest";
-    public static String updateScoreResponse = "updateScoreResponse";
+    
+    public static String userExistRequest = "UserExistRequest";
+    public static String userExistRespons = "UserExistRespons";
+    public static String offlineUsersRequest = "OfflineUsersRequest";
+    public static String offlineUsersResponse = "OfflineUsersResponse";
+    public static String getAllInfoRequest = "GetAllInfoRequest";
+    public static String getAllInfoResponse = "GetAllInfoResponse";
+    public static String getOnlinePlayerNumRequest = "GetOnlinePlayerNumRequest";
+    public static String getOnlinePlayerNumResponse = "GetOnlinePlayerNumResponse";
+    public static String getbusyPlayersNumRequest = "GetbusyPlayersNumRequest";
+    public static String getbusyPlayersNumResponse = "GetbusyPlayersNumResponse";
+//    public static String loginResponse = "";
+//    public static String loginResponse = "";
+//    public static String loginResponse = "";
+//    public static String loginResponse = "";
+    
 }

@@ -1,4 +1,4 @@
-package tictactoeserver;
+package nasr;
 
 import static com.sun.org.apache.xalan.internal.lib.ExsltDatetime.date;
 import java.sql.Connection;
@@ -18,7 +18,7 @@ import tictactoeclient.UserDTO;
 public class DataAccessLayer {
 
     static Connection con = null;
-    static PreparedStatement pst;
+    PreparedStatement pst;
 
     public DataAccessLayer() {
         
@@ -84,7 +84,7 @@ public class DataAccessLayer {
         return result;
     }
 
-    public boolean checkIfUserExist(String userName) throws SQLException {
+    public static boolean checkIfUserExist(String userName) throws SQLException {
 
         PreparedStatement pst = con.prepareStatement(" SELECT ROOT.\"USERS\".\"USERNAME\" FROM  ROOT.\"USERS\" Where ROOT.\"USERS\".\"USERNAME\"=? ");
         pst.setString(1, userName);
@@ -100,7 +100,7 @@ public class DataAccessLayer {
         return found;
     }
 
-    public ArrayList<UserDTO> getOnlinePlayers() throws SQLException {
+    public static ArrayList<UserDTO> getOnlinePlayers() throws SQLException {
 
         ArrayList<UserDTO> onlinePlayers = new ArrayList<>();
 
@@ -117,7 +117,7 @@ public class DataAccessLayer {
         return onlinePlayers;
     }
 
-    public ArrayList<UserDTO> getOfflinePlayers() throws SQLException {
+    public static ArrayList<UserDTO> getOfflinePlayers() throws SQLException {
 
         ArrayList<UserDTO> onlinePlayers = new ArrayList<>();
 
@@ -132,7 +132,7 @@ public class DataAccessLayer {
         return onlinePlayers;
     }
 
-    public UserDTO getAllInfo(String userName) throws SQLException {
+    public static UserDTO getAllInfo(String userName) throws SQLException {
 
         ArrayList<UserDTO> onlinePlayers = getOnlinePlayers();
         for (UserDTO user : onlinePlayers) {
@@ -143,7 +143,7 @@ public class DataAccessLayer {
         return null;
     }
 
-    public int getOnlinePlayersNum() throws SQLException {
+    public static int getOnlinePlayersNum() throws SQLException {
 
         String sql = "select count( ROOT.\"USERS\".\"USERID\") AS total FROM  ROOT.\"USERS\" Where ROOT.\"USERS\".\"ISONLINE\"=? ";
         PreparedStatement pst = con.prepareStatement(sql);
@@ -156,7 +156,7 @@ public class DataAccessLayer {
         return count;
     }
 
-    public int getbusyPlayersNum() throws SQLException {
+    public static int getbusyPlayersNum() throws SQLException {
         String sql = "select count( ROOT.\"USERS\".\"USERID\") AS total FROM  ROOT.\"USERS\" Where ROOT.\"USERS\".\"ISPLAYING\"=? ";
         PreparedStatement pst = con.prepareStatement(sql);
         pst.setBoolean(1, true);
@@ -181,48 +181,31 @@ public class DataAccessLayer {
         return count;
     }
 
-    public static Boolean logout(String userName) {
+    public void logout(String userName) {
         try {
             pst = con.prepareStatement("update ROOT.\"USERS\" set ROOT.\"USERS\".\"ISONLINE\" = false where ROOT.\"USERS\".\"USERNAME\" = ?");
             pst.setString(1, userName);
             pst.executeUpdate();
-            return true;
 
         } catch (SQLException ex) {
             ex.printStackTrace();
-            return false;
         }
 
     }
 
-    public static Boolean makePlayerOneBusy(String userName1) {
+    public void makePlayersBusy(String userName1, String userName2) {
         try {
-            PreparedStatement pst = con.prepareStatement("Update ROOT.\"USERS\" set ROOT.\"USERS\".\"ISPLAYING\" = ? where ROOT.\"USERS\".\"USERNAME\" = ? ");
+            PreparedStatement pst = con.prepareStatement("Update ROOT.\"USERS\" set ROOT.\"USERS\".\"ISPLAYING\" = ? where ROOT.\"USERS\".\"USERNAME\" = ? or ROOT.\"USERS\".\"USERNAME\" = ?");
             pst.setBoolean(1, true);
             pst.setString(2, userName1);
-             return true;
-   
+            pst.setString(3, userName2);
 
         } catch (SQLException ex) {
             Logger.getLogger(DataAccessLayer.class.getName()).log(Level.SEVERE, null, ex);
-             return false;
-        }
-    }
-    
-        public static Boolean makePlayerTwoBusy(String userName2) {
-        try {
-            PreparedStatement pst = con.prepareStatement("Update ROOT.\"USERS\" set ROOT.\"USERS\".\"ISPLAYING\" = ? where ROOT.\"USERS\".\"USERNAME\" = ? ");
-            pst.setBoolean(1, true);
-            pst.setString(2, userName2);
-            return true;
-
-        } catch (SQLException ex) {
-            Logger.getLogger(DataAccessLayer.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         }
     }
 
-    public static int getPlayerScore(String userName) throws SQLException {
+    public int getPlayerScore(String userName) throws SQLException {
 
         PreparedStatement pst = con.prepareStatement(" SELECT * FROM  ROOT.\"USERS\" Where ROOT.\"USERS\".\"USERNAME\"=? ");
         pst.setString(1, userName);
@@ -235,16 +218,14 @@ public class DataAccessLayer {
         }
     }
 
-    public static Boolean updateScore(UserDTO userInfo) {
+    public void updateScore(UserDTO userInfo) {
         try {
             PreparedStatement pst = con.prepareStatement("Update ROOT.\"USERS\" set ROOT.\"USERS\".\"SCORE\" = ? where ROOT.\"USERS\".\"USERNAME\" = ?");
             pst.setInt(1, userInfo.getScore());
             pst.setString(2, userInfo.getUserName());
             pst.executeUpdate();
-            return true  ;
         } catch (SQLException ex) {
             Logger.getLogger(DataAccessLayer.class.getName()).log(Level.SEVERE, null, ex);
-            return false ;
         }
     }
 

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tictactoeserver;
+package nasr;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,7 +15,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import tictactoeclient.Messages;
+import nasr.Messages;
 import tictactoeclient.UserDTO;
 
 /**
@@ -31,7 +31,7 @@ public class ServerConnection {
     Socket socket;
     String ip;
     int portNum;
-    UserDTO obj;
+    Object obj;
     String msg;
 
     public ServerConnection(Socket socket) {
@@ -75,52 +75,35 @@ public class ServerConnection {
                             obj = (UserDTO) objectinputstream.readObject();
                             sendMessage(Messages.registrationResponse, registrationValidation());
 
-                        } else if (msg.equals(Messages.getOfflinePlayersNumRequest)) {
-
-                            obj = (UserDTO) objectinputstream.readObject();
-                            sendMessage(Messages.getOfflinePlayersNumResponse, getOfflinePlayersNumValidation());
-
-                        } else if (msg.equals(Messages.logoutRequest)) {
-
-                            obj = (UserDTO) objectinputstream.readObject();
-                            sendMessage(Messages.logoutResponse, logoutValidation(obj.getUserName()));
-
-                        } else if (msg.equals(Messages.makePlayerOneBusyRequest)) {
-
-                            obj = (UserDTO) objectinputstream.readObject();
-                            sendMessage(Messages.makePlayerOneBusyResponse, makePlayerOneBusyValidation(obj.getUserName()));
-
-                        } else if (msg.equals(Messages.makePlayerTwoBusyRequest)) {
-
-                            obj = (UserDTO) objectinputstream.readObject();
-                            sendMessage(Messages.makePlayerTwoBusyResponse, makePlayerTwoBusyValidation(obj.getUserName()));
-
-                        }else if (msg.equals(Messages.getPlayerScoreRequest)) {
-
-                            obj = (UserDTO) objectinputstream.readObject();
-                            sendMessage(Messages.getPlayerScoreResponse, getPlayerScoreValidation(obj.getUserName()));
-
-                        }else if (msg.equals(Messages.getPlayerScoreRequest)) {
-
-                            obj = (UserDTO) objectinputstream.readObject();
-                            sendMessage(Messages.getPlayerScoreResponse, getPlayerScoreValidation(obj.getUserName()));
-
-                        }else if (msg.equals(Messages.updateScoreRequest)) {
-
-                            obj = (UserDTO) objectinputstream.readObject();
-                            sendMessage(Messages.updateScoreResponse, updateScoreValidation(obj));
-
                         }
-                       
-
+                        
+                        else if (msg.equals(Messages.userExistRequest)) {
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.userExistRespons, checkUserExist());
+                        } else if (msg.equals(Messages.offlineUsersRequest)) {
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.offlineUsersResponse, getOfflineUsers());
+                        } else if (msg.equals(Messages.getAllInfoRequest)) {
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.getAllInfoResponse, getUserInfo());
+                        }else if (msg.equals(Messages.getOnlinePlayerNumRequest)) {
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.getOnlinePlayerNumResponse, getOnlinePlayersNum());
+                        }else if (msg.equals(Messages.getbusyPlayersNumRequest)) {
+                            obj = (UserDTO) objectinputstream.readObject();
+                            sendMessage(Messages.getbusyPlayersNumResponse, getbusyPlayersNum());
+                        }
+                        
+                        
                     } catch (ClassNotFoundException | IOException e) {
                         e.printStackTrace();
+                    } catch (SQLException ex) {
+                        Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
 
             }
-        }
-                .start();
+        }.start();
 
     }
 
@@ -132,10 +115,8 @@ public class ServerConnection {
                 try {
                     objectoutputstream.writeObject(msg);
                     objectoutputstream.writeObject(obj);
-
                 } catch (IOException ex) {
-                    Logger.getLogger(ServerConnection.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
             }
@@ -153,49 +134,46 @@ public class ServerConnection {
         return true;
     }
 
-    public boolean registrationValidation() {
+    public Boolean registrationValidation() {
         // insert in database and return true if sucess and false if failed
         System.out.println("Login Validation Test");
         return false;
     }
 
-    public Integer getOfflinePlayersNumValidation() {
-
-        System.out.println("OfflinePlayersNum Validation Test");
-
-        try {
-            return DataAccessLayer.getOfflinePlayersNum();
-
-        } catch (SQLException ex) {
-            Logger.getLogger(ServerConnection.class
-                    .getName()).log(Level.SEVERE, null, ex);
+    public Boolean checkUserExist() throws SQLException {
+        Boolean isExist = false;
+        UserDTO user=(UserDTO) obj;
+        System.out.println("checkUserExist Test");
+        if (DataAccessLayer.checkIfUserExist(user.getUserName())) {
+            isExist = true;
         }
-        return 0;
+        return isExist;
     }
 
-    public Boolean logoutValidation(String userName) {
+    public ArrayList<UserDTO> getOfflineUsers() throws SQLException {
 
-        return DataAccessLayer.logout(userName);
-    }
-
-    public Boolean makePlayerOneBusyValidation(String UserName) {
-        return DataAccessLayer.makePlayerOneBusy(UserName);
-    }
-
-    public Boolean makePlayerTwoBusyValidation(String UserName) {
-        return DataAccessLayer.makePlayerTwoBusy(UserName);
-    }
-    public Integer getPlayerScoreValidation(String UserName){
-        try {
-            return DataAccessLayer.getPlayerScore(UserName);
-        } catch (SQLException ex) {
-            Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
-            return 0;
+        ArrayList<UserDTO> UserList = DataAccessLayer.getOfflinePlayers();
+        if (UserList.isEmpty()) {
+            UserList = new ArrayList<UserDTO>();
         }
-    }
-    public Boolean updateScoreValidation(UserDTO obj)
-    {
-        return DataAccessLayer.updateScore(obj);
+        return UserList;
     }
 
+    public Object getUserInfo() throws SQLException {
+        
+        Object user = DataAccessLayer.getAllInfo(((UserDTO) obj).getUserName());
+
+        return user;
+    }
+    public Integer getOnlinePlayersNum() throws SQLException{
+        Integer onlinePlayersNum=0;
+        onlinePlayersNum=DataAccessLayer.getOnlinePlayersNum();
+    return onlinePlayersNum;
+    }
+    
+    public Integer getbusyPlayersNum() throws SQLException{
+         Integer busyPlayersNum=0;
+         busyPlayersNum=DataAccessLayer.getbusyPlayersNum();
+         return busyPlayersNum;
+    }
 }
